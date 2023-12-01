@@ -6,6 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class SensorDataValue {
-    private LocalDateTime date;
+    private String date;
     private Double value;
 }
