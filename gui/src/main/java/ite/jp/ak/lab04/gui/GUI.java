@@ -1,12 +1,12 @@
 package ite.jp.ak.lab04.gui;
 
-import ite.jp.ak.lab04.client.Client;
+import ite.jp.ak.lab04.client.web.api.ApiClient;
 
 import javax.swing.*;
 
 public class GUI {
     public static void main(String[] args) {
-        Client c;
+        ApiClient c;
         JFrame frame = new JFrame("Hello");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JLabel label = new JLabel("Hej, jestem interfejsem graficznym!");
