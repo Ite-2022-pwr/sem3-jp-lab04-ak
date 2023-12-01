@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="lab04_client">
+    <output-path>$PROJECT_DIR$/out/artifacts/lab04_client</output-path>
+    <root id="archive" name="lab04_client.jar">
+      <element id="directory" name="sources">
+        <element id="module-source" name="client" />
+      </element>
+      <element id="module-output" name="client" />
+    </root>
+  </artifact>
+</component>

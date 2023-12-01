@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="lab04_gui">
+    <output-path>$PROJECT_DIR$/out/artifacts/lab04_gui</output-path>
+    <root id="archive" name="lab04_gui.jar">
+      <element id="directory" name="sources">
+        <element id="module-source" name="gui" />
+      </element>
+      <element id="module-output" name="gui" />
+      <element id="module-output" name="client" />
+    </root>
+  </artifact>
+</component>
