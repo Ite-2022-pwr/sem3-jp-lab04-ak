@@ -29,9 +29,8 @@ public class ViewController {
 
     private final GiosApiClientRepository apiClientRepository = GiosApiClientRepositoryImpl.getInstance();
 
-    private Station selectedStation;
     private List<Sensor> sensorsForSelectedStation;
-    private List<SensorData> sensorsDataForSelectedStation = new ArrayList<>();
+    private final List<SensorData> sensorsDataForSelectedStation = new ArrayList<>();
     private AirQualityindex indexForSelectedStation;
 
     // Tabela stacji pomiarowych
@@ -63,9 +62,9 @@ public class ViewController {
     }
 
     public void onSelectedStation(MouseEvent event) {
-        this.selectedStation = stationTableView.getSelectionModel().getSelectedItem();
+        Station selectedStation = stationTableView.getSelectionModel().getSelectedItem();
         aqindexBarChart.getData().clear();
-        if (this.selectedStation != null) {
+        if (selectedStation != null) {
             getDataForStation(selectedStation);
             createIndexBarChartForStation(selectedStation);
             createDataInTimeScatterCharts();
@@ -115,10 +114,8 @@ public class ViewController {
 
         aqindexBarChart.setTitle("Indeks jakości powietrza dla stacji " + station.getStationName() + "\nw dniu " + indexForSelectedStation.getStCalcDate());
 
-        // "SO2", "NO2", "PM10", "PM25", "O3"
-        String[] params = {"SO2", "NO2", "PM10", "PM2.5", "O3"};
-
-        for (var param : params) {
+        for (var sensor : sensorsForSelectedStation) {
+            String param = sensor.getParam().getParamCode();
             String sourceDataDate = indexForSelectedStation.getSourceDataDateForParam(param);
             IndexLevel indexLevel = indexForSelectedStation.getIndexLevelForParam(param);
             System.out.println("Param: " + param + ", sourceDataDate: " + sourceDataDate + ", indexLevel: " + indexLevel);
@@ -128,7 +125,7 @@ public class ViewController {
                 continue;
             }
 
-            XYChart.Data<String, Double> data = new XYChart.Data<>(param + "\n" + indexLevel.getIndexLevelName(), sensorDataValue.getValue());
+            XYChart.Data<String, Double> data = new XYChart.Data<>(sensor.getParam().getParamName() + "\n" + indexLevel.getIndexLevelName(), sensorDataValue.getValue());
             series.getData().add(data);
 
             String color = getColorForIndexLevel(indexLevel);
