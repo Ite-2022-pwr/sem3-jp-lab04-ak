@@ -100,56 +100,45 @@ public class ViewController {
                 if (value.getValue() != null) {
                     series.getData().add(new XYChart.Data<>(value.getDate(), value.getValue()));
                 }
-//                else {
-//                    series.getData().add(new XYChart.Data<>(value.getDate(), 0.0));
-//                }
             }
             chart.getData().add(series);
-            for (var data : series.getData()) {
-                data.getNode().setScaleX(0.5);
-                data.getNode().setScaleY(0.5);
-            }
             Tab newTab = new Tab(key, chart);
             dataTabPane.getTabs().add(newTab);
         }
     }
 
     public void createIndexBarChartForStation(Station station) {
-        XYChart.Series<String, Double> series = new XYChart.Series<>();
         aqindexBarChart.getData().clear();
+
+        XYChart.Series<String, Double> series = new XYChart.Series<>();
         aqindexBarChart.getData().add(series);
-        aqindexBarChart.setTitle("Jakość powietrza dla stacji " + station.getStationName());
 
-        // "ST", "SO2", "NO2", "PM10", "PM25", "O3"
+        aqindexBarChart.setTitle("Indeks jakości powietrza dla stacji " + station.getStationName() + "\nw dniu " + indexForSelectedStation.getStCalcDate());
 
-        addDataToSeries(series, "ST", indexForSelectedStation.getStSourceDataDate(), indexForSelectedStation.getStIndexLevel());
-        addDataToSeries(series, "SO2", indexForSelectedStation.getSo2SourceDataDate(), indexForSelectedStation.getSo2IndexLevel());
-        addDataToSeries(series, "NO2", indexForSelectedStation.getNo2SourceDataDate(), indexForSelectedStation.getNo2IndexLevel());
-        addDataToSeries(series, "PM10", indexForSelectedStation.getPm10SourceDataDate(), indexForSelectedStation.getPm10IndexLevel());
-        addDataToSeries(series, "PM25", indexForSelectedStation.getPm25SourceDataDate(), indexForSelectedStation.getPm25IndexLevel());
-        addDataToSeries(series, "O3", indexForSelectedStation.getO3SourceDataDate(), indexForSelectedStation.getO3IndexLevel());
+        // "SO2", "NO2", "PM10", "PM25", "O3"
+        String[] params = {"SO2", "NO2", "PM10", "PM25", "O3"};
+
+        for (var param : params) {
+            String sourceDataDate = indexForSelectedStation.getSourceDataDateForParam(param);
+            IndexLevel indexLevel = indexForSelectedStation.getIndexLevelForParam(param);
+            System.out.println("Param: " + param + ", sourceDataDate: " + sourceDataDate + ", indexLevel: " + indexLevel);
+            addDataToSeries(series, param, sourceDataDate, indexLevel);
+        }
+
 
     }
 
-    public void addDataToSeries(XYChart.Series<String, Double> series, String key, String sourceDataDate, IndexLevel indexLevel) {
-        SensorDataValue sensorDataValue = getSensorDataValueByKeyAndDate(key, sourceDataDate);
+    public void addDataToSeries(XYChart.Series<String, Double> series, String param, String calcDate, IndexLevel indexLevel) {
+        SensorDataValue sensorDataValue = getSensorDataValueByParamAndSourceDataDate(param, calcDate);
+        System.out.println("sensorDataValue: " + sensorDataValue);
         if (sensorDataValue == null) {
             return;
         }
 
-        XYChart.Data<String, Double> data = new XYChart.Data<>(key + " [" + indexLevel.getIndexLevelName() + "]", sensorDataValue.getValue());
+        XYChart.Data<String, Double> data = new XYChart.Data<>(param + "\n" + indexLevel.getIndexLevelName(), sensorDataValue.getValue());
         series.getData().add(data);
 
-        String color = switch (indexLevel.getId()) {
-            case -1 -> "#ffffff";   // brak indeksu
-            case 0 -> "#14db21";    // Bardzo dobry
-            case 1 -> "#81db14";    // Dobry
-            case 2 -> "#badb14";    // Umiarkowany
-            case 3 -> "#dbd114";    // Dostateczny
-            case 4 -> "#db8b14";    // Zły
-            case 5 -> "#db2814";    // Bardzo zły
-            default -> throw new IllegalArgumentException("Niedozwolona wartość: " + indexLevel.getId());
-        };
+        String color = getColorForIndexLevel(indexLevel);
 
         // https://stackoverflow.com/questions/14158104/javafx-barchart-bar-color
         for (Node node : data.getNode().lookupAll(".default-color0.chart-bar")) {
@@ -157,12 +146,39 @@ public class ViewController {
         }
     }
 
-    public SensorDataValue getSensorDataValueByKeyAndDate(String key, String date) {
+    private static String getColorForIndexLevel(IndexLevel indexLevel) {
+        switch (indexLevel.getId()) {
+            case -1 -> {
+                return "#ffffff";  // brak indeksu
+            }
+            case 0 -> {
+                return "#14db21";  // Bardzo dobry
+            }
+            case 1 -> {
+                return "#81db14";  // Dobry
+            }
+            case 2 -> {
+                return "#badb14";  // Umiarkowany
+            }
+            case 3 -> {
+                return "#dbd114";  // Dostateczny
+            }
+            case 4 -> {
+                return "#db8b14";  // Zły
+            }
+            case 5 -> {
+                return "#db2814";  // Bardzo zły
+            }
+            default -> throw new IllegalArgumentException("Niedozwolona wartość: " + indexLevel.getId());
+        }
+    }
+
+    public SensorDataValue getSensorDataValueByParamAndSourceDataDate(String param, String date) {
         for (var sensorData : this.sensorsDataForSelectedStation) {
-            if (sensorData.getKey().equals(key)) {
+            if (sensorData.getKey().equals(param)) {
                 for (var value : sensorData.getValues()) {
                     if (value.getDate().equals(date)) {
-                        System.out.println("Found value: " + value + " for key: " + key);
+                        System.out.println("Found value: " + value + " for key: " + param);
                         return value;
                     }
                 }

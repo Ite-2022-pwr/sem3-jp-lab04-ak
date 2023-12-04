@@ -38,4 +38,26 @@ public class AirQualityindex extends ModelBase {
     private String o3CalcDate;
     private IndexLevel o3IndexLevel;
     private String o3SourceDataDate;
+
+    public IndexLevel getIndexLevelForParam(String param) {
+        return switch (param) {
+            case "SO2" -> so2IndexLevel;
+            case "NO2" -> no2IndexLevel;
+            case "PM10" -> pm10IndexLevel;
+            case "PM25" -> pm25IndexLevel;
+            case "O3" -> o3IndexLevel;
+            default -> null;
+        };
+    }
+
+    public String getSourceDataDateForParam(String param) {
+        return switch (param) {
+            case "SO2" -> so2SourceDataDate;
+            case "NO2" -> no2SourceDataDate;
+            case "PM10" -> pm10SourceDataDate;
+            case "PM25" -> pm25SourceDataDate;
+            case "O3" -> o3SourceDataDate;
+            default -> null;
+        };
+    }
 }
