@@ -48,6 +48,7 @@ public class ViewController {
     public void initialize() {
         stationIdTableColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         stationNameTableColumn.setCellValueFactory(new PropertyValueFactory<>("stationName"));
+        aqindexBarChart.setAnimated(false);
     }
 
     public void refresh(ActionEvent event) {
@@ -63,11 +64,9 @@ public class ViewController {
 
     public void onSelectedStation(MouseEvent event) {
         this.selectedStation = stationTableView.getSelectionModel().getSelectedItem();
+        aqindexBarChart.getData().clear();
         if (this.selectedStation != null) {
             getDataForStation(selectedStation);
-            // TODO: BUG in chart rendering
-//            createIndexBarChartForStation(selectedStation);
-//            aqindexBarChart.getData().clear();
             createIndexBarChartForStation(selectedStation);
             createDataInTimeScatterCharts();
         }
@@ -96,12 +95,14 @@ public class ViewController {
 
             XYChart.Series<String, Number> series = new XYChart.Series<>();
             series.setName("Dane pomiarowe parametru " + key);
-            for (var value : sensorData.getValues()) {
+            for (var i = sensorData.getValues().length - 1; i >= 0; i--) {
+                var value = sensorData.getValues()[i];
                 if (value.getValue() != null) {
                     series.getData().add(new XYChart.Data<>(value.getDate(), value.getValue()));
-                } else {
-                    series.getData().add(new XYChart.Data<>(value.getDate(), 0.0));
                 }
+//                else {
+//                    series.getData().add(new XYChart.Data<>(value.getDate(), 0.0));
+//                }
             }
             chart.getData().add(series);
             for (var data : series.getData()) {
