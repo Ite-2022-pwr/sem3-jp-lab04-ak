@@ -116,7 +116,7 @@ public class ViewController {
         aqindexBarChart.setTitle("Indeks jakości powietrza dla stacji " + station.getStationName() + "\nw dniu " + indexForSelectedStation.getStCalcDate());
 
         // "SO2", "NO2", "PM10", "PM25", "O3"
-        String[] params = {"SO2", "NO2", "PM10", "PM25", "O3"};
+        String[] params = {"SO2", "NO2", "PM10", "PM2.5", "O3"};
 
         for (var param : params) {
             String sourceDataDate = indexForSelectedStation.getSourceDataDateForParam(param);
