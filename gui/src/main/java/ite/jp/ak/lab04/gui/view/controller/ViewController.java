@@ -88,8 +88,8 @@ public class ViewController {
         dataTabPane.getTabs().clear();
         for (var sensorData : this.sensorsDataForSelectedStation) {
             String key = sensorData.getKey();
-            CategoryAxis xAxis = new CategoryAxis();
-            NumberAxis yAxis = new NumberAxis();
+            CategoryAxis xAxis = new CategoryAxis();    // data
+            NumberAxis yAxis = new NumberAxis();        // wartość
             ScatterChart<String, Number> chart = new ScatterChart<>(xAxis, yAxis);
             chart.setTitle("Dane w czasie dla " + key);
 
@@ -122,28 +122,24 @@ public class ViewController {
             String sourceDataDate = indexForSelectedStation.getSourceDataDateForParam(param);
             IndexLevel indexLevel = indexForSelectedStation.getIndexLevelForParam(param);
             System.out.println("Param: " + param + ", sourceDataDate: " + sourceDataDate + ", indexLevel: " + indexLevel);
-            addDataToSeries(series, param, sourceDataDate, indexLevel);
+            SensorDataValue sensorDataValue = getSensorDataValueByParamAndSourceDataDate(param, sourceDataDate);
+            System.out.println("sensorDataValue: " + sensorDataValue);
+            if (sensorDataValue == null) {
+                continue;
+            }
+
+            XYChart.Data<String, Double> data = new XYChart.Data<>(param + "\n" + indexLevel.getIndexLevelName(), sensorDataValue.getValue());
+            series.getData().add(data);
+
+            String color = getColorForIndexLevel(indexLevel);
+
+            // https://stackoverflow.com/questions/14158104/javafx-barchart-bar-color
+            for (Node node : data.getNode().lookupAll(".default-color0.chart-bar")) {
+                node.setStyle("-fx-bar-fill: " + color);
+            }
         }
 
 
-    }
-
-    public void addDataToSeries(XYChart.Series<String, Double> series, String param, String calcDate, IndexLevel indexLevel) {
-        SensorDataValue sensorDataValue = getSensorDataValueByParamAndSourceDataDate(param, calcDate);
-        System.out.println("sensorDataValue: " + sensorDataValue);
-        if (sensorDataValue == null) {
-            return;
-        }
-
-        XYChart.Data<String, Double> data = new XYChart.Data<>(param + "\n" + indexLevel.getIndexLevelName(), sensorDataValue.getValue());
-        series.getData().add(data);
-
-        String color = getColorForIndexLevel(indexLevel);
-
-        // https://stackoverflow.com/questions/14158104/javafx-barchart-bar-color
-        for (Node node : data.getNode().lookupAll(".default-color0.chart-bar")) {
-            node.setStyle("-fx-bar-fill: " + color);
-        }
     }
 
     private static String getColorForIndexLevel(IndexLevel indexLevel) {
