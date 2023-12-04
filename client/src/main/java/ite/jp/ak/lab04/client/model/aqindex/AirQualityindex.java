@@ -11,6 +11,9 @@ public class AirQualityindex extends ModelBase {
     private IndexLevel stIndexLevel;
     private String stSourceDataDate;
 
+    private Boolean stIndexStatus;
+    private String stIndexCrParam;
+
     // SO2
     private String so2CalcDate;
     private IndexLevel so2IndexLevel;
