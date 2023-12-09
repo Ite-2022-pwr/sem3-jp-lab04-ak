@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class GiosApiClientRepositoryImpl implements GiosApiClientRepository {
-    private ApiClient apiClient = ApiClient.getInstance();
+    private final ApiClient apiClient = ApiClient.getInstance();
 
     private static GiosApiClientRepositoryImpl instance;
 
