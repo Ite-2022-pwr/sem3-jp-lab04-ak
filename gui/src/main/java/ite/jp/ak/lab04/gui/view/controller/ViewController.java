@@ -12,18 +12,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.chart.*;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class ViewController {
 
@@ -31,6 +28,7 @@ public class ViewController {
 
     private List<Sensor> sensorsForSelectedStation;
     private final List<SensorData> sensorsDataForSelectedStation = new ArrayList<>();
+    private final Map<String, SensorData> sensorDataMapForSelectedStation = new HashMap<>();
     private AirQualityindex indexForSelectedStation;
 
     // Tabela stacji pomiarowych
@@ -38,16 +36,20 @@ public class ViewController {
     @FXML protected TableColumn<Station, Integer> stationIdTableColumn;
     @FXML protected TableColumn<Station, String> stationNameTableColumn;
 
-    // Wykres indeksu jakości powietrza
-    @FXML protected BarChart<String, Double> aqindexBarChart;
+    // Indeks jakości powietrza
+    @FXML protected Label aqindexTitleLabel;
+    @FXML protected GridPane aqindexGridPane;
 
-    // Zakładki dla wykresów danych w czasie
-    @FXML protected TabPane dataTabPane;
+    // Wykres danych w czasie
+    @FXML protected ScatterChart<String, Number> scatterChartForParam;
+
+    // Wybór parametru
+    @FXML protected ComboBox<String> paramNameComboBox;
 
     public void initialize() {
         stationIdTableColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         stationNameTableColumn.setCellValueFactory(new PropertyValueFactory<>("stationName"));
-        aqindexBarChart.setAnimated(false);
+        scatterChartForParam.setAnimated(false);
     }
 
     public void refresh(ActionEvent event) {
@@ -63,15 +65,50 @@ public class ViewController {
 
     public void onSelectedStation(MouseEvent event) {
         Station selectedStation = stationTableView.getSelectionModel().getSelectedItem();
-        aqindexBarChart.getData().clear();
+        scatterChartForParam.getData().clear();
+        scatterChartForParam.setTitle(null);
+        paramNameComboBox.getItems().clear();
         if (selectedStation != null) {
             getDataForStation(selectedStation);
-            createIndexBarChartForStation(selectedStation);
-            createDataInTimeScatterCharts();
+            fillComboBoxWithParamNames();
+            createAirQualityIndex(selectedStation);
+        }
+    }
+
+    public void createAirQualityIndex(Station station) {
+        aqindexGridPane.getChildren().clear();
+        aqindexTitleLabel.setText("Indeks jakości powietrza (" + indexForSelectedStation.getStSourceDataDate() + ")");
+        int position = 0;
+        for (var sensor : sensorsForSelectedStation) {
+            String param = sensor.getParam().getParamCode();
+            String sourceDataDate = indexForSelectedStation.getSourceDataDateForParam(param);
+            IndexLevel indexLevel = indexForSelectedStation.getIndexLevelForParam(param);
+            if (sourceDataDate == null || indexLevel == null) {
+                continue;
+            }
+            System.out.println("Param: " + param + ", sourceDataDate: " + sourceDataDate + ", indexLevel: " + indexLevel);
+            if (indexLevel.getId() == -1) {
+                continue;
+            }
+            var color = getColorForIndexLevel(indexLevel);
+            var paramNameLabel = new Label(sensor.getParam().getParamName());
+            paramNameLabel.setFont(new Font(18));
+
+            var paramIndexLevelNameLabel = new Label(indexLevel.getIndexLevelName());
+            paramIndexLevelNameLabel.setFont(new Font(18));
+            paramIndexLevelNameLabel.setTextFill(Color.web(color));
+
+            aqindexGridPane.add(paramNameLabel, 0, position);
+            aqindexGridPane.add(paramIndexLevelNameLabel, 1, position);
+
+            position++;
         }
     }
 
     public void getDataForStation(Station station) {
+        sensorsForSelectedStation = null;
+        indexForSelectedStation = null;
+        sensorDataMapForSelectedStation.clear();
         this.sensorsForSelectedStation = apiClientRepository.findSensorsByStationId(station.getId());
         this.indexForSelectedStation = apiClientRepository.getIndexByStationId(station.getId());
         this.sensorsDataForSelectedStation.clear();
@@ -79,64 +116,41 @@ public class ViewController {
             var sensorData = apiClientRepository.getDataBySensorId(sensor.getId());
             if (sensorData != null) {
                 sensorsDataForSelectedStation.add(sensorData);
+                sensorDataMapForSelectedStation.put(sensor.getParam().getParamCode(), sensorData);
             }
         }
     }
 
-    public void createDataInTimeScatterCharts() {
-        dataTabPane.getTabs().clear();
-        for (var sensorData : this.sensorsDataForSelectedStation) {
-            String key = sensorData.getKey();
-            CategoryAxis xAxis = new CategoryAxis();    // data
-            NumberAxis yAxis = new NumberAxis();        // wartość
-            ScatterChart<String, Number> chart = new ScatterChart<>(xAxis, yAxis);
-            chart.setTitle("Dane w czasie dla " + key);
+    public void onSelectedParamName(ActionEvent event) {
+        String param = paramNameComboBox.getSelectionModel().getSelectedItem();
+        if (param == null) {
+            return;
+        }
+        createDataInTimeScatterChart(param);
+    }
 
-            XYChart.Series<String, Number> series = new XYChart.Series<>();
-            series.setName("Dane pomiarowe parametru " + key);
-            for (var i = sensorData.getValues().length - 1; i >= 0; i--) {
-                var value = sensorData.getValues()[i];
-                if (value.getValue() != null) {
-                    series.getData().add(new XYChart.Data<>(value.getDate(), value.getValue()));
-                }
-            }
-            chart.getData().add(series);
-            Tab newTab = new Tab(key, chart);
-            dataTabPane.getTabs().add(newTab);
+    public void fillComboBoxWithParamNames() {
+        paramNameComboBox.getItems().clear();
+        for (var paramName : sensorDataMapForSelectedStation.keySet()) {
+            paramNameComboBox.getItems().add(paramName);
         }
     }
 
-    public void createIndexBarChartForStation(Station station) {
-        aqindexBarChart.getData().clear();
+    public void createDataInTimeScatterChart(String param) {
+        scatterChartForParam.getData().clear();
+        var sensorData = sensorDataMapForSelectedStation.get(param);
+        String key = sensorData.getKey();
+        scatterChartForParam.setTitle("Dane w czasie dla " + key);
 
-        XYChart.Series<String, Double> series = new XYChart.Series<>();
-        aqindexBarChart.getData().add(series);
-
-        aqindexBarChart.setTitle("Indeks jakości powietrza dla stacji " + station.getStationName() + "\nw dniu " + indexForSelectedStation.getStCalcDate());
-
-        for (var sensor : sensorsForSelectedStation) {
-            String param = sensor.getParam().getParamCode();
-            String sourceDataDate = indexForSelectedStation.getSourceDataDateForParam(param);
-            IndexLevel indexLevel = indexForSelectedStation.getIndexLevelForParam(param);
-            System.out.println("Param: " + param + ", sourceDataDate: " + sourceDataDate + ", indexLevel: " + indexLevel);
-            SensorDataValue sensorDataValue = getSensorDataValueByParamAndSourceDataDate(param, sourceDataDate);
-            System.out.println("sensorDataValue: " + sensorDataValue);
-            if (sensorDataValue == null) {
-                continue;
-            }
-
-            XYChart.Data<String, Double> data = new XYChart.Data<>(sensor.getParam().getParamName() + "\n" + indexLevel.getIndexLevelName(), sensorDataValue.getValue());
-            series.getData().add(data);
-
-            String color = getColorForIndexLevel(indexLevel);
-
-            // https://stackoverflow.com/questions/14158104/javafx-barchart-bar-color
-            for (Node node : data.getNode().lookupAll(".default-color0.chart-bar")) {
-                node.setStyle("-fx-bar-fill: " + color);
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        series.setName("Dane pomiarowe parametru " + key);
+        for (var i = sensorData.getValues().length - 1; i >= 0; i--) {
+            var value = sensorData.getValues()[i];
+            if (value.getValue() != null) {
+                series.getData().add(new XYChart.Data<>(value.getDate(), value.getValue()));
             }
         }
-
-
+        scatterChartForParam.getData().add(series);
     }
 
     private static String getColorForIndexLevel(IndexLevel indexLevel) {
