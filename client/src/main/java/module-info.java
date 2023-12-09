@@ -4,7 +4,6 @@ module ite.jp.ak.lab04.client {
     requires reactor.core;
     requires lombok;
 
-    exports ite.jp.ak.lab04.client;
     exports ite.jp.ak.lab04.client.config;
     exports ite.jp.ak.lab04.client.web.api;
     exports ite.jp.ak.lab04.client.model;
