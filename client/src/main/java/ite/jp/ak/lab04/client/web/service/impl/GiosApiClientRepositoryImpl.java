@@ -5,13 +5,11 @@ import ite.jp.ak.lab04.client.model.data.SensorData;
 import ite.jp.ak.lab04.client.model.sensor.Sensor;
 import ite.jp.ak.lab04.client.model.station.Station;
 import ite.jp.ak.lab04.client.web.api.ApiClient;
-import ite.jp.ak.lab04.client.web.service.repository.GiosApiClientRepository;
+import ite.jp.ak.lab04.client.web.service.dao.GiosApiClientDao;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class GiosApiClientRepositoryImpl implements GiosApiClientRepository {
+public class GiosApiClientRepositoryImpl implements GiosApiClientDao {
     private final ApiClient apiClient = ApiClient.getInstance();
 
     private static GiosApiClientRepositoryImpl instance;

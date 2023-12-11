@@ -7,7 +7,7 @@ import ite.jp.ak.lab04.client.model.data.SensorDataValue;
 import ite.jp.ak.lab04.client.model.sensor.Sensor;
 import ite.jp.ak.lab04.client.model.station.Station;
 import ite.jp.ak.lab04.client.web.service.impl.GiosApiClientRepositoryImpl;
-import ite.jp.ak.lab04.client.web.service.repository.GiosApiClientRepository;
+import ite.jp.ak.lab04.client.web.service.dao.GiosApiClientDao;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -24,7 +24,7 @@ import java.util.*;
 
 public class ViewController {
 
-    private final GiosApiClientRepository apiClientRepository = GiosApiClientRepositoryImpl.getInstance();
+    private final GiosApiClientDao apiClientRepository = GiosApiClientRepositoryImpl.getInstance();
 
     private List<Sensor> sensorsForSelectedStation;
     private final List<SensorData> sensorsDataForSelectedStation = new ArrayList<>();

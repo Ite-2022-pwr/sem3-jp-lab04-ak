@@ -11,6 +11,6 @@ module ite.jp.ak.lab04.client {
     exports ite.jp.ak.lab04.client.model.sensor;
     exports ite.jp.ak.lab04.client.model.data;
     exports ite.jp.ak.lab04.client.model.aqindex;
-    exports ite.jp.ak.lab04.client.web.service.repository;
+    exports ite.jp.ak.lab04.client.web.service.dao;
     exports ite.jp.ak.lab04.client.web.service.impl;
 }
